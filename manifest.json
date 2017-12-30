@@ -11,8 +11,7 @@
     "default_title": "Click here to view recently touched TeamDynamix tickets."
   },
   "permissions": [
-    "activeTab",
     "storage",
-    "webNavigation"
+    "history"
   ]
 }

@@ -1,163 +1,123 @@
-// Copyright (c) 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/**
+ * Register the initilize function when the DOM has finished loading
+ */
+document.addEventListener('DOMContentLoaded', initialize);
 
 /**
- * Get the current URL.
- *
- * @param {function(string)} callback called when the URL of the current tab
- *   is found.
+ * Event handler for the select since
+ * @param {event} event 
  */
-function getCurrentTabUrl(callback) {
-  // Query filter to be passed to chrome.tabs.query - see
-  // https://developer.chrome.com/extensions/tabs#method-query
-  var queryInfo = {
-    active: true,
-    currentWindow: true
-  };
-
-  chrome.tabs.query(queryInfo, (tabs) => {
-    // chrome.tabs.query invokes the callback with a list of tabs that match the
-    // query. When the popup is opened, there is certainly a window and at least
-    // one tab, so we can safely assume that |tabs| is a non-empty array.
-    // A window can only have one active tab at a time, so the array consists of
-    // exactly one tab.
-    var tab = tabs[0];
-
-    // A tab is a plain object that provides information about the tab.
-    // See https://developer.chrome.com/extensions/tabs#type-Tab
-    var url = tab.url;
-
-    // tab.url is only available if the "activeTab" permission is declared.
-    // If you want to see the URL of other tabs (e.g. after removing active:true
-    // from |queryInfo|), then the "tabs" permission is required to see their
-    // "url" properties.
-    console.assert(typeof url == 'string', 'tab.url should be a string');
-
-    callback(url);
-  });
-
-  // Most methods of the Chrome extension APIs are asynchronous. This means that
-  // you CANNOT do something like this:
-  //
-  // var url;
-  // chrome.tabs.query(queryInfo, (tabs) => {
-  //   url = tabs[0].url;
-  // });
-  // alert(url); // Shows "undefined", because chrome.tabs.query is async.
+function selectSinceChanged(event) {
+  search(event.target.value);
 }
 
 /**
- * Change the background color of the current page.
- *
- * @param {string} color The new background color.
+ * Execute steps on the intial load of the page
  */
-function changeBackgroundColor(color) {
-  var script = 'document.body.style.backgroundColor="' + color + '";';
-  // See https://developer.chrome.com/extensions/tabs#method-executeScript.
-  // chrome.tabs.executeScript allows us to programmatically inject JavaScript
-  // into a page. Since we omit the optional first argument "tabId", the script
-  // is inserted into the active tab of the current window, which serves as the
-  // default.
-  chrome.tabs.executeScript({
-    code: script
-  });
+function initialize() {
+  let selectSince = document.getElementById('selectSince');
+  selectSince.onchange = selectSinceChanged;
+
+  search(selectSince.value);
 }
 
 /**
- * Gets the saved background color for url.
- *
- * @param {string} url URL whose background color is to be retrieved.
- * @param {function(string)} callback called with the saved background color for
- *     the given url on success, or a falsy value if no color is retrieved.
+ * Execute the ticket search with search parameters
+ * @param {string} sinceText 
  */
-function getSavedBackgroundColor(url, callback) {
-  // See https://developer.chrome.com/apps/storage#type-StorageArea. We check
-  // for chrome.runtime.lastError to ensure correctness even when the API call
-  // fails.
-  chrome.storage.sync.get(url, (items) => {
-    callback(chrome.runtime.lastError ? null : items[url]);
-  });
+function search(sinceText) {
+
+  console.debug('Searching...');
+
+  let historySearchQuery = buildTicketSearchObject(sinceText);
+
+  searchHistoryForTickets(historySearchQuery);
+
 }
 
 /**
- * Sets the given background color for url.
- *
- * @param {string} url URL for which background color is to be saved.
- * @param {string} color The background color to be saved.
+ * Build the chrome history search query object
+ * https://developer.chrome.com/extensions/history#method-search
+ * @param {string} sinceText 
  */
-function saveBackgroundColor(url, color) {
-  var items = {};
-  items[url] = color;
-  // See https://developer.chrome.com/apps/storage#type-StorageArea. We omit the
-  // optional callback since we don't need to perform any action once the
-  // background color is saved.
-  chrome.storage.sync.set(items);
-}
+function buildTicketSearchObject(sinceText) {
 
-const TDX_TICKET_URL_IDENTIFIERS = [
-  "tickets/ticketdet",
-  "tickets/ticketdet"
-];
+  let result = {
+    text: "tickets/ticketdet"
+  }
 
-function isTDXTicketUrl(url) {
+  let now = new Date();
+  let todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  let yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  let yesterdayAtMidnight = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
 
-  let result = false;
+  let nowMSSinceEpoch = now.getTime();
+  let searchMSSinceEpoch = 0;
 
-  for(let identifier of TDX_TICKET_URL_IDENTIFIERS) {
-
-    if (url.toLowerCase().includes(identifier)) {
-      result = true;
+  switch (sinceText) {
+    case 'oneHourAgo':
+      searchMSSinceEpoch = nowMSSinceEpoch - 3600000;
       break;
-    }
+  
+    case 'today':
+      searchMSSinceEpoch = todayAtMidnight.getTime();
+      break;
 
+    case 'yesterday':
+      searchMSSinceEpoch = yesterdayAtMidnight.getTime();
+      break;
+
+    default:
+      console.error('since option not yet supported');
+      break;
+  }
+
+  if(searchMSSinceEpoch) {
+    console.debug((new Date(searchMSSinceEpoch)).toISOString());
+    result['startTime'] = searchMSSinceEpoch;
   }
 
   return result;
+
 }
 
-// This extension loads the saved background color for the current tab if one
-// exists. The user can select a new background color from the dropdown for the
-// current page, and it will be saved as part of the extension's isolated
-// storage. The chrome.storage API is used for this purpose. This is different
-// from the window.localStorage API, which is synchronous and stores data bound
-// to a document's origin. Also, using chrome.storage.sync instead of
-// chrome.storage.local allows the extension data to be synced across multiple
-// user devices.
-document.addEventListener('DOMContentLoaded', () => {
-  getCurrentTabUrl((url) => {
+/**
+ * Executes the search of chrome history
+ * https://developer.chrome.com/extensions/history#method-search
+ * @param {object} query 
+ */
+function searchHistoryForTickets(query) {
 
-    if(isTDXTicketUrl(url)) {
-      console.log('TDX!');
-    } else {
-      console.log('NOT TDX!');
-    };
-    // var dropdown = document.getElementById('dropdown');
+  chrome.history.search(query, displaySearchResults);
 
-    // // Load the saved background color for this page and modify the dropdown
-    // // value, if needed.
-    // getSavedBackgroundColor(url, (savedColor) => {
-    //   if (savedColor) {
-    //     changeBackgroundColor(savedColor);
-    //     dropdown.value = savedColor;
-    //   }
-    // });
+}
 
-    // // Ensure the background color is changed and saved when the dropdown
-    // // selection changes.
-    // dropdown.addEventListener('change', () => {
-    //   changeBackgroundColor(dropdown.value);
-    //   saveBackgroundColor(url, dropdown.value);
-    // });
-  });
-});
+/**
+ * Displays a list of chrome history items on the page.
+ * @param {array} historyItems https://developer.chrome.com/extensions/history#type-HistoryItem
+ */
+function displaySearchResults(historyItems) {
 
-chrome.webNavigation.onDOMContentLoaded.addListener(inspectForTDXTicket);
+  let spanResultCount = document.getElementById('resultCount');
+  spanResultCount.innerHTML = '';
+  spanResultCount.appendChild(document.createTextNode(historyItems.length.toString() + ' Ticket(s)'));
 
-function inspectForTDXTicket(details) {
-  if(details && details.url && isTDXTicketUrl(details.url)) {
-    console.log('TDX!');
-  } else {
-    console.log('NOT TDX!');
-  };
+  let ul = document.getElementById('listResults');
+  ul.innerHTML = '';
+
+  for(let historyItem of historyItems) {
+    
+    let link = document.createElement('a');
+    link.setAttribute('href', historyItem.url);
+    link.setAttribute('target', '_blank');
+    link.appendChild(document.createTextNode(historyItem.visitCount.toString() + ' visit(s) - ' + historyItem.title));
+
+    let li = document.createElement('li');
+    li.appendChild(link);
+
+    ul.appendChild(li);
+
+  }
+  
 }
