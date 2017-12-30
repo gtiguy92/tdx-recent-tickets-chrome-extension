@@ -99,24 +99,42 @@ function searchHistoryForTickets(query) {
  */
 function displaySearchResults(historyItems) {
 
+  // Update ticket results summary information
   let spanResultCount = document.getElementById('resultCount');
   spanResultCount.innerHTML = '';
   spanResultCount.appendChild(document.createTextNode(historyItems.length.toString() + ' Ticket(s)'));
 
-  let ul = document.getElementById('listResults');
-  ul.innerHTML = '';
+  // Grab a reference to the table body and clear the contents
+  let tableResultsBody = document.getElementById('tableResultsBody');
+  tableResultsBody.innerHTML = '';
 
   for(let historyItem of historyItems) {
     
+    // Build the table row
+    let row = document.createElement('tr');
+
+    // Build the visits cell
+    let tdVisits = document.createElement('td');
+    tdVisits.appendChild(document.createTextNode(historyItem.visitCount.toString()));
+    row.appendChild(tdVisits);
+
+    // Build the ticket link cell
+    let tdTicket = document.createElement('td');
     let link = document.createElement('a');
     link.setAttribute('href', historyItem.url);
     link.setAttribute('target', '_blank');
-    link.appendChild(document.createTextNode(historyItem.visitCount.toString() + ' visit(s) - ' + historyItem.title));
+    link.appendChild(document.createTextNode(historyItem.title));
+    tdTicket.appendChild(link);
+    row.appendChild(tdTicket);
 
-    let li = document.createElement('li');
-    li.appendChild(link);
+    // Build the last visited column
+    let tdLastVisit = document.createElement('td');
+    let msSinceLastVisit = Date.now() - historyItem.lastVisitTime;
+    tdLastVisit.appendChild(document.createTextNode(msSinceLastVisit.toString()));
+    row.appendChild(tdLastVisit);
 
-    ul.appendChild(li);
+    // Add the row to the table body
+    tableResultsBody.appendChild(row);
 
   }
   
