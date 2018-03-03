@@ -46,30 +46,29 @@ function buildTicketSearchObject(sinceText) {
     text: "tickets/ticketdet"
   }
 
-  let now = new Date();
-  let todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  let yesterday = new Date();
-  yesterday.setDate(now.getDate() - 1);
-  let yesterdayAtMidnight = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
-
-  let nowMSSinceEpoch = now.getTime();
-  let searchMSSinceEpoch = 0;
-
   switch (sinceText) {
     case 'oneHourAgo':
-      searchMSSinceEpoch = nowMSSinceEpoch - 3600000;
+      searchMSSinceEpoch = moment().valueOf() - 3600000;
       break;
   
     case 'today':
-      searchMSSinceEpoch = todayAtMidnight.getTime();
+      searchMSSinceEpoch = moment().startOf('day').valueOf();
       break;
 
     case 'yesterday':
-      searchMSSinceEpoch = yesterdayAtMidnight.getTime();
+      searchMSSinceEpoch = moment().startOf('day').subtract(1, 'days').valueOf();
+      break;
+
+    case 'thisWeek':
+      searchMSSinceEpoch = moment().startOf('week').valueOf();
+      break;
+
+    case 'thisMonth':
+      searchMSSinceEpoch = moment().startOf('month').valueOf();
       break;
 
     default:
-      console.error('since option not yet supported');
+      console.error('since option not supported');
       break;
   }
 
@@ -129,8 +128,8 @@ function displaySearchResults(historyItems) {
 
     // Build the last visited column
     let tdLastVisit = document.createElement('td');
-    let msSinceLastVisit = Date.now() - historyItem.lastVisitTime;
-    tdLastVisit.appendChild(document.createTextNode(msSinceLastVisit.toString()));
+    let lastVisitText = moment(historyItem.lastVisitTime).fromNow();
+    tdLastVisit.appendChild(document.createTextNode(lastVisitText));
     row.appendChild(tdLastVisit);
 
     // Add the row to the table body
