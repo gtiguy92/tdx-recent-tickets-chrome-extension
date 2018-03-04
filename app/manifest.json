@@ -2,8 +2,8 @@
   "manifest_version": 2,
 
   "name": "TeamDynamix Recent Tickets",
-  "description": "This extension allows the user to easily view their most recently touched TeamDynamix tickets.",
-  "version": "1.0",
+  "description": "This extension allows you to easily view your most recently touched TeamDynamix tickets.",
+  "version": "0.0.0.1",
 
   "browser_action": {
     "default_icon": "icon.png",
