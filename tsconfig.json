@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "dom",
+            "es2017"
+        ],
+        "module": "ES6",
+        "noImplicitAny": true,
+        "outDir": "./dist",
+        "preserveConstEnums": true,
+        "removeComments": true,
+        "sourceMap": true,
+        "target": "es2016"
+    },
+    "include": [
+        "app/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}

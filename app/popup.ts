@@ -1,13 +1,24 @@
+import * as moment from '../node_modules/moment/moment';
+import * as _ from 'lodash'
+
 /**
  * Register the initilize function when the DOM has finished loading
  */
 document.addEventListener('DOMContentLoaded', initialize);
 
-var settings = {
+interface UserSettings {
+  filter: HistoryFilter
+}
+
+interface HistoryFilter {
+  since: string;
+}
+
+var settings: UserSettings = {
   filter: {
     since: "today"
   }
-}
+};
 
 /**
  * Execute steps on the intial load of the page
@@ -20,13 +31,15 @@ function initialize() {
   
   // Setup fields that persist to synced storage and run search
   getSettingsFromStorage((results) => {
-    settings = results;
+    settings = results['filter'];
 
-    let selectSince = document.getElementById('selectSince');
+    let selectSince: HTMLSelectElement = <HTMLSelectElement> document.getElementById('selectSince');
     selectSince.value = settings.filter.since;
-    selectSince.onchange = (event) => {
+    selectSince.onchange = (event: Event) => {
 
-      settings.filter.since = event.target.value;
+      let selectSince: HTMLSelectElement = <HTMLSelectElement>event.target;
+
+      settings.filter.since = selectSince.value;
       saveSettings(settings);
       search();
 
@@ -43,8 +56,8 @@ function initialize() {
  */
 function search() {
 
-  let selectSince = document.getElementById('selectSince');
-  let txtSearch = document.getElementById('txtSearch');
+  let selectSince: HTMLSelectElement = <HTMLSelectElement>document.getElementById('selectSince');
+  let txtSearch: HTMLInputElement = <HTMLInputElement>document.getElementById('txtSearch');
 
   let historySearchQuery = buildTicketSearchObject(selectSince.value);
 
@@ -57,11 +70,13 @@ function search() {
  * https://developer.chrome.com/extensions/history#method-search
  * @param {string} sinceText 
  */
-function buildTicketSearchObject(sinceText) {
+function buildTicketSearchObject(sinceText: string) : chrome.history.HistoryQuery {
 
-  let result = {
+  let result : chrome.history.HistoryQuery = {
     text: "tickets/ticketdet"
   }
+
+  let searchMSSinceEpoch : number;
 
   switch (sinceText) {
     case 'oneHourAgo':
@@ -102,7 +117,7 @@ function buildTicketSearchObject(sinceText) {
  * https://developer.chrome.com/extensions/history#method-search
  * @param {object} query 
  */
-function searchHistoryForTickets(query, searchPhrase) {
+function searchHistoryForTickets(query : chrome.history.HistoryQuery, searchPhrase: string) {
 
   chrome.history.search(query, (results) => {
 
@@ -110,7 +125,7 @@ function searchHistoryForTickets(query, searchPhrase) {
       return filterSearchResults(item, searchPhrase)
     });
 
-    displaySearchResults(filteredResults);
+    displaySearchResults(filteredResults, searchPhrase);
   });
 
 }
@@ -121,7 +136,7 @@ function searchHistoryForTickets(query, searchPhrase) {
  * @param {object} historyItem 
  * @param {string} searchPhrase 
  */
-function filterSearchResults(historyItem, searchPhrase) {
+function filterSearchResults(historyItem: chrome.history.HistoryItem, searchPhrase: string) {
 
   if (!searchPhrase) {
     return true;
@@ -135,7 +150,7 @@ function filterSearchResults(historyItem, searchPhrase) {
  * Displays a list of chrome history items on the page.
  * @param {array} historyItems https://developer.chrome.com/extensions/history#type-HistoryItem
  */
-function displaySearchResults(historyItems, searchPhrase) {
+function displaySearchResults(historyItems: chrome.history.HistoryItem[], searchPhrase: string) {
 
   // Update ticket results summary information
   let spanResultCount = document.getElementById('resultCount');
@@ -159,7 +174,7 @@ function displaySearchResults(historyItems, searchPhrase) {
  * Renders the HTML for the supplied search result
  * @param {object} historyItem 
  */
-function renderSearchResultRow(historyItem) {
+function renderSearchResultRow(historyItem: chrome.history.HistoryItem) {
   // Build the table row
   let row = document.createElement('tr');
 
@@ -190,7 +205,7 @@ function renderSearchResultRow(historyItem) {
  * Saves settings to sync storage
  * @param {object} settings 
  */
-function saveSettings(settings) {
+function saveSettings(settings: object) {
   if (settings) {
     chrome.storage.sync.set(settings);
   }
@@ -200,6 +215,6 @@ function saveSettings(settings) {
  * Gets settings from sync storage and invokes callback upon completion
  * @param {function} callback 
  */
-function getSettingsFromStorage(callback) {
+function getSettingsFromStorage(callback: (items: { [key: string]: any; }) => void) {
   chrome.storage.sync.get(settings, callback);
 }

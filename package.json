@@ -1,0 +1,32 @@
+{
+  "name": "tdx-recent-tickets-chrome-extension",
+  "version": "0.0.2",
+  "description": "This extension allows you to easily view your most recently touched TeamDynamix tickets.",
+  "main": "popup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtiguy92/tdx-recent-tickets-chrome-extension.git"
+  },
+  "author": "Chris Neiger",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gtiguy92/tdx-recent-tickets-chrome-extension/issues"
+  },
+  "homepage": "https://github.com/gtiguy92/tdx-recent-tickets-chrome-extension#readme",
+  "typeRoots": [
+    "./node_modules/@types/",
+    "./node_modules/moment"
+  ],
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "moment": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.60",
+    "@types/lodash": "^4.14.104",
+    "@types/moment": "^2.13.0"
+  }
+}
