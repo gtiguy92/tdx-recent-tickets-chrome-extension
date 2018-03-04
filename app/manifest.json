@@ -4,7 +4,6 @@
   "name": "TeamDynamix Recent Tickets",
   "description": "This extension allows you to easily view your most recently touched TeamDynamix tickets.",
   "version": "0.0.0.1",
-  "default_locale": "en",
 
   "icons" : {
     "16": "icon-48.png",
