@@ -186,12 +186,20 @@ function renderSearchResultRow(historyItem) {
   return row;
 }
 
+/**
+ * Saves settings to sync storage
+ * @param {object} settings 
+ */
 function saveSettings(settings) {
   if (settings) {
     chrome.storage.sync.set(settings);
   }
 }
 
+/**
+ * Gets settings from sync storage and invokes callback upon completion
+ * @param {function} callback 
+ */
 function getSettingsFromStorage(callback) {
   chrome.storage.sync.get(settings, callback);
 }
