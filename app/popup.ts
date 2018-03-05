@@ -7,11 +7,27 @@ import * as _ from 'lodash'
 document.addEventListener('DOMContentLoaded', initialize);
 
 interface UserSettings {
-  filter: HistoryFilter
+  filter: HistoryFilter;
 }
 
 interface HistoryFilter {
   since: string;
+}
+
+enum TicketAction {
+  detail = "Detail",
+  edit = "Edit",
+  update = "Update"
+}
+
+interface TicketSummary {
+  id: number;
+  title: string;
+  visitCount: number;
+  lastVisitedUnixMS: number;
+  lastVisitedDisplay: string;
+  tdAppName: string;
+  ticketAction: TicketAction;
 }
 
 var settings: UserSettings = {
@@ -23,7 +39,7 @@ var settings: UserSettings = {
 /**
  * Execute steps on the intial load of the page
  */
-function initialize() {
+function initialize(): void {
 
   // Setup fields that don't depend on saved settings
   let txtSearch = document.getElementById('txtSearch');
@@ -54,7 +70,7 @@ function initialize() {
  * Execute the ticket search with search parameters
  * @param {string} sinceText 
  */
-function search() {
+function search(): void {
 
   let selectSince: HTMLSelectElement = <HTMLSelectElement>document.getElementById('selectSince');
   let txtSearch: HTMLInputElement = <HTMLInputElement>document.getElementById('txtSearch');
@@ -70,7 +86,7 @@ function search() {
  * https://developer.chrome.com/extensions/history#method-search
  * @param {string} sinceText 
  */
-function buildTicketSearchObject(sinceText: string) : chrome.history.HistoryQuery {
+function buildTicketSearchObject(sinceText: string): chrome.history.HistoryQuery {
 
   let result : chrome.history.HistoryQuery = {
     text: "tickets/ticketdet"
@@ -117,7 +133,7 @@ function buildTicketSearchObject(sinceText: string) : chrome.history.HistoryQuer
  * https://developer.chrome.com/extensions/history#method-search
  * @param {object} query 
  */
-function searchHistoryForTickets(query : chrome.history.HistoryQuery, searchPhrase: string) {
+function searchHistoryForTickets(query: chrome.history.HistoryQuery, searchPhrase: string) {
 
   chrome.history.search(query, (results) => {
 
@@ -136,7 +152,7 @@ function searchHistoryForTickets(query : chrome.history.HistoryQuery, searchPhra
  * @param {object} historyItem 
  * @param {string} searchPhrase 
  */
-function filterSearchResults(historyItem: chrome.history.HistoryItem, searchPhrase: string) {
+function filterSearchResults(historyItem: chrome.history.HistoryItem, searchPhrase: string): boolean {
 
   if (!searchPhrase) {
     return true;
@@ -174,7 +190,7 @@ function displaySearchResults(historyItems: chrome.history.HistoryItem[], search
  * Renders the HTML for the supplied search result
  * @param {object} historyItem 
  */
-function renderSearchResultRow(historyItem: chrome.history.HistoryItem) {
+function renderSearchResultRow(historyItem: chrome.history.HistoryItem): HTMLTableRowElement {
   // Build the table row
   let row = document.createElement('tr');
 
@@ -217,4 +233,23 @@ function saveSettings(settings: object) {
  */
 function getSettingsFromStorage(callback: (items: { [key: string]: any; }) => void) {
   chrome.storage.sync.get(settings, callback);
+}
+
+function parseTicketPageTitle(pageTitle: string): TicketSummary {
+  let result: TicketSummary;
+
+  if (!pageTitle) {
+    return null;
+  }
+  
+  let dashIndex: number = pageTitle.indexOf('-');
+
+  if (!dashIndex) {
+    return result;
+  }
+
+  let classificationAndAction: string[] = pageTitle.substring(0, dashIndex).split(' ');
+  result.ticketAction = TicketAction[classificationAndAction[1]];
+
+  return result;
 }
