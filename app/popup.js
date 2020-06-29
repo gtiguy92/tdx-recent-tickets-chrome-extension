@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', initialize);
 
 var settings = {
   filter: {
-    since: "today"
+    sinceHoursAgo: "24"
   }
 }
 
@@ -23,10 +23,10 @@ function initialize() {
     settings = results;
 
     let selectSince = document.getElementById('selectSince');
-    selectSince.value = settings.filter.since;
+    selectSince.value = settings.filter.sinceHoursAgo;
     selectSince.onchange = (event) => {
 
-      settings.filter.since = event.target.value;
+      settings.filter.sinceHoursAgo = event.target.value;
       saveSettings(settings);
       search();
 
@@ -55,43 +55,17 @@ function search() {
 /**
  * Build the chrome history search query object
  * https://developer.chrome.com/extensions/history#method-search
- * @param {string} sinceText 
+ * @param {string} hoursAgo 
  */
-function buildTicketSearchObject(sinceText) {
+function buildTicketSearchObject(hoursAgo) {
 
   let result = {
     text: "tickets/ticketdet"
   }
 
-  switch (sinceText) {
-    case 'oneHourAgo':
-      searchMSSinceEpoch = moment().valueOf() - 3600000;
-      break;
-  
-    case 'today':
-      searchMSSinceEpoch = moment().startOf('day').valueOf();
-      break;
+  let hoursToMsConversion = 3600000;
 
-    case 'yesterday':
-      searchMSSinceEpoch = moment().startOf('day').subtract(1, 'days').valueOf();
-      break;
-
-    case 'thisWeek':
-      searchMSSinceEpoch = moment().startOf('week').valueOf();
-      break;
-
-    case 'thisMonth':
-      searchMSSinceEpoch = moment().startOf('month').valueOf();
-      break;
-
-    default:
-      console.error('since option not supported');
-      break;
-  }
-
-  if (searchMSSinceEpoch) {
-    result['startTime'] = searchMSSinceEpoch;
-  }
+  result['startTime'] = moment().valueOf() - (hoursAgo * hoursToMsConversion);
 
   return result;
 
@@ -163,11 +137,6 @@ function renderSearchResultRow(historyItem) {
   // Build the table row
   let row = document.createElement('tr');
 
-  // Build the visits cell
-  let tdVisits = document.createElement('td');
-  tdVisits.appendChild(document.createTextNode(historyItem.visitCount.toString()));
-  row.appendChild(tdVisits);
-
   // Build the ticket link cell
   let tdTicket = document.createElement('td');
   let link = document.createElement('a');
@@ -176,6 +145,11 @@ function renderSearchResultRow(historyItem) {
   link.appendChild(document.createTextNode(historyItem.title));
   tdTicket.appendChild(link);
   row.appendChild(tdTicket);
+
+  // Build the visits cell
+  let tdVisits = document.createElement('td');
+  tdVisits.appendChild(document.createTextNode(historyItem.visitCount.toString()));
+  row.appendChild(tdVisits);
 
   // Build the last visited column
   let tdLastVisit = document.createElement('td');

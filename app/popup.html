@@ -43,38 +43,30 @@
         text-decoration: none;
       }
 
-
     </style>
 
-    <!--
-      - JavaScript and HTML must be in separate files: see our Content Security
-      - Policy documentation[1] for details and explanation.
-      -
-      - [1]: https://developer.chrome.com/extensions/contentSecurityPolicy
-    -->
-    <script src="lib/lodash.min.js"></script>
-    <script src="lib/moment.min.js"></script>
-    <script src="popup.js"></script>
+    <link rel="lib/bootstrap.min.css">
 
   </head>
 
   <body>
-    <h2>Recent TeamDynamix Tickets</h2>
+    <h2>Recent TeamDynamix Tickets - <span id="resultCount" class="header"></span></h2>
     <div id="container">
-      
-      <span id="resultCount" class="header"></span>
 
       <div id="divSearchContainer">
-        <input type="text" id="txtSearch" placeholder="Search" />
+
+        <div class="input-group input-group-sm mb-3">
+          <input type="text" id="txtSearch" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+        </div>
 
         <div id="divSinceFilterContainer">
           <span>Since:</span>
           <select id="selectSince">
-            <option selected value="oneHourAgo">1 hour ago</option>
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="thisWeek">This Week</option>
-            <option value="thisMonth">This Month</option>
+            <option selected value="1">1 hour ago</option>
+            <option value="24">Last 24 hours</option>
+            <option value="168">Last 7 days</option>
+            <option value="720">Last 30 days</option>
+            <option value="2160">Last 90 days</option>
           </select>
         </div>
         
@@ -84,8 +76,8 @@
       <table id="tableResults">
         <thead>
           <tr>
-            <th>Visits</th>
             <th>Ticket</th>
+            <th>Visits</th>
             <th>Last Visited</th>
           </tr>
         </thead>
@@ -94,5 +86,18 @@
         </tbody>
       </table>
     </div>
+
+    <!--
+      - JavaScript and HTML must be in separate files: see our Content Security
+      - Policy documentation[1] for details and explanation.
+      -
+      - [1]: https://developer.chrome.com/extensions/contentSecurityPolicy
+    -->
+    <script src="lib/lodash.min.js"></script>
+    <script src="lib/moment.min.js"></script>
+    <script src="lib/jquery-3.5.1.slim.min.js"></script>
+    <script src="lib/bootstrap.bundle.min.js"></script>
+    <script src="popup.js"></script>
+
   </body>
 </html>
